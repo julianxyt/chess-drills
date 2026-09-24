@@ -1,0 +1,1006 @@
+<meta charset="utf-8">
+<title>Square Pressure</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Spectral:ital,wght@0,500;0,600;1,500&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --bg:#E4E7E2; --panel:#F5F6F2; --panel2:#E9ECE5; --sunk:#DCE0D8;
+  --ink:#171B19; --ink2:#333a36; --muted:#5C655F; --line:#C4CBC2; --line2:#D7DCD4;
+  --accentRGB:179,58,46; --accent:#B33A2E;
+  --good:#3D6B4B; --goodSoft:rgba(61,107,75,.14);
+  --miss:#2E4E7C; --missSoft:rgba(46,78,124,.14);
+  --bl:#E7E2D1; --bd:#7D8F72;
+  --gw:#FCFBF5; --gb:#171A16;
+  --shadow:0 1px 0 rgba(23,27,25,.05), 0 8px 24px -18px rgba(23,27,25,.5);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --bg:#14181A; --panel:#1C2124; --panel2:#232A2D; --sunk:#101416;
+    --ink:#E8ECE8; --ink2:#C8D0CA; --muted:#98A29B; --line:#2F3639; --line2:#262D30;
+    --accentRGB:226,92,78; --accent:#E25C4E;
+    --good:#6FAE80; --goodSoft:rgba(111,174,128,.16);
+    --miss:#84A9DE; --missSoft:rgba(132,169,222,.16);
+    --bl:#B3AD97; --bd:#54684F;
+    --gw:#F6F4EA; --gb:#14170F;
+    --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 26px -18px #000;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --bg:#14181A; --panel:#1C2124; --panel2:#232A2D; --sunk:#101416;
+  --ink:#E8ECE8; --ink2:#C8D0CA; --muted:#98A29B; --line:#2F3639; --line2:#262D30;
+  --accentRGB:226,92,78; --accent:#E25C4E;
+  --good:#6FAE80; --goodSoft:rgba(111,174,128,.16);
+  --miss:#84A9DE; --missSoft:rgba(132,169,222,.16);
+  --bl:#B3AD97; --bd:#54684F;
+  --gw:#F6F4EA; --gb:#14170F;
+  --shadow:0 1px 0 rgba(0,0,0,.3), 0 10px 26px -18px #000;
+}
+
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1160px; margin:0 auto; padding-inline:18px; padding-block:26px 64px}
+h1,h2,h3{margin:0; text-wrap:balance}
+p{margin:0}
+
+/* ---------- masthead ---------- */
+.masthead{display:grid; gap:6px; padding-bottom:18px; border-bottom:1px solid var(--line); margin-bottom:22px}
+.eyebrow{font-family:"IBM Plex Mono", ui-monospace, monospace; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+.masthead h1{font-family:Spectral, Georgia, "Times New Roman", serif; font-weight:600; font-size:clamp(30px,5.2vw,44px); letter-spacing:-.01em; line-height:1.05}
+.lede{color:var(--ink2); max-width:62ch}
+.lede b{font-weight:600; color:var(--ink)}
+
+/* ---------- layout ---------- */
+.grid{display:grid; gap:26px; grid-template-columns:minmax(0,1.08fr) minmax(300px,.92fr); align-items:start}
+@media (max-width:920px){ .grid{grid-template-columns:1fr} }
+.stack{display:grid; gap:14px}
+.rail{display:grid; gap:14px; align-content:start}
+
+/* ---------- prompt ---------- */
+.prompt{display:grid; gap:4px; grid-template-columns:1fr auto; align-items:start;
+  background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:13px 15px; box-shadow:var(--shadow)}
+.prompt .tag{grid-column:1; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+.ask{grid-column:1; font-family:Spectral, Georgia, serif; font-size:clamp(19px,3.4vw,25px); font-weight:600; line-height:1.15}
+.ask .side{color:var(--accent)}
+.prompt .meta{grid-column:1; font-size:13px; color:var(--muted)}
+.clock{grid-column:2; grid-row:1 / span 3; align-self:center; font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-variant-numeric:tabular-nums; font-size:20px; color:var(--ink2); padding-left:14px; border-left:1px solid var(--line2)}
+
+/* ---------- board ---------- */
+.board{container-type:inline-size; display:grid; grid-template-columns:repeat(8,1fr); aspect-ratio:1/1;
+  width:100%; max-width:566px; border:1px solid var(--line); border-radius:3px; overflow:hidden; box-shadow:var(--shadow); touch-action:manipulation}
+.sq{position:relative; border:0; margin:0; padding:0; font:inherit; color:inherit; cursor:pointer; display:block; overflow:hidden;
+  -webkit-tap-highlight-color:transparent; user-select:none}
+.sq.l{background:var(--bl)} .sq.d{background:var(--bd)}
+.sq.out{opacity:.44; cursor:default}
+.sq:focus-visible{outline:3px solid var(--accent); outline-offset:-3px; z-index:4}
+.sq .glyph{position:absolute; inset:0; display:grid; place-items:center; font-size:10.2cqw; line-height:1; z-index:2}
+.sq .glyph.w{color:var(--gw); text-shadow:0 0 1px var(--gb), .5px .5px 0 var(--gb), -.5px .5px 0 var(--gb), .5px -.5px 0 var(--gb), -.5px -.5px 0 var(--gb)}
+.sq .glyph.b{color:var(--gb); text-shadow:0 0 1px rgba(255,255,255,.55)}
+.sq .coord{position:absolute; left:.4cqw; top:.2cqw; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:2.5cqw;
+  color:rgba(23,27,25,.5); z-index:3}
+.sq.d .coord{color:rgba(255,255,255,.62)}
+.sq .coord.fl{left:auto; top:auto; right:.5cqw; bottom:.1cqw}
+
+/* red watermark stamp */
+.sq .mark{position:absolute; inset:0; z-index:1; opacity:0}
+.sq.m1 .mark,.sq.m2 .mark,.sq.m3 .mark,.sq.m4 .mark,.sq.m5 .mark{opacity:1;
+  background:
+    repeating-linear-gradient(45deg, rgba(var(--accentRGB),.20) 0 1.4px, transparent 1.4px 6px),
+    rgba(var(--accentRGB), var(--tint));
+  box-shadow:inset 0 0 0 2px rgba(var(--accentRGB),.75)}
+.sq.m1{--tint:.22} .sq.m2{--tint:.38} .sq.m3{--tint:.52} .sq.m4{--tint:.64} .sq.m5{--tint:.74}
+.sq .cnt{position:absolute; right:.6cqw; top:.2cqw; z-index:3; font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-weight:600; font-size:3.9cqw; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.55); display:none}
+.sq.m1 .cnt,.sq.m2 .cnt,.sq.m3 .cnt,.sq.m4 .cnt,.sq.m5 .cnt{display:block}
+.sq.judged .cnt{display:none}
+
+/* verdicts */
+.sq .verdict{position:absolute; left:.8cqw; bottom:.1cqw; z-index:3; display:none; align-items:baseline; gap:1cqw;
+  font-family:"IBM Plex Mono",ui-monospace,monospace; font-weight:600; font-size:5.4cqw; line-height:1.1;
+  text-shadow:0 1px 3px rgba(0,0,0,.45), 0 0 2px rgba(0,0,0,.35)}
+.sq.judged .verdict{display:flex}
+.sq .verdict i{font-style:normal; font-size:3.6cqw; font-weight:400; text-decoration:line-through; opacity:.85}
+.sq.ok .verdict{color:var(--good)} .sq.bad .verdict{color:var(--miss)}
+.sq.ok::after,.sq.bad::after{content:""; position:absolute; inset:0; z-index:1; pointer-events:none}
+.sq.ok::after{box-shadow:inset 0 0 0 3px var(--good)}
+.sq.bad::after{box-shadow:inset 0 0 0 3px var(--miss);
+  background:repeating-linear-gradient(-45deg, var(--missSoft) 0 3px, transparent 3px 9px)}
+.sq.sel{z-index:5}
+.sq.sel::before{content:""; position:absolute; inset:0; z-index:3; box-shadow:inset 0 0 0 3px var(--ink); pointer-events:none}
+
+/* ---------- buttons ---------- */
+.actionbar{display:flex; flex-wrap:wrap; gap:7px}
+.btn{font:inherit; font-weight:500; padding:8px 13px; border-radius:3px; border:1px solid var(--line);
+  background:var(--panel); color:var(--ink); cursor:pointer; display:inline-flex; align-items:center; gap:8px}
+.btn:hover{background:var(--panel2)}
+.btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn[disabled]{opacity:.45; cursor:default}
+.btn kbd{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:10px; opacity:.7; border:1px solid currentColor;
+  border-radius:2px; padding:0 3px; line-height:1.4}
+
+/* ---------- cards ---------- */
+.card{background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:14px 15px; box-shadow:var(--shadow)}
+.card h2{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); font-weight:600; margin-bottom:10px}
+.headline{font-family:Spectral,Georgia,serif; font-size:21px; font-weight:600; line-height:1.15}
+.headline.win{color:var(--good)} .headline.lose{color:var(--miss)}
+.tally{display:grid; gap:6px; margin-top:10px; font-size:13.5px}
+.tally .row{display:flex; justify-content:space-between; gap:12px; align-items:baseline}
+.tally .row span:last-child{font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric:tabular-nums; color:var(--ink)}
+.tally .row span:first-child{color:var(--muted)}
+.hint{color:var(--muted); font-size:13px}
+
+/* legend */
+.legend{display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--line2)}
+.legend .chip{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--muted)}
+.swatch{width:20px; height:20px; border-radius:2px; background:var(--bl); position:relative; flex:none; border:1px solid var(--line)}
+.swatch i{position:absolute; inset:0;
+  background:repeating-linear-gradient(45deg, rgba(var(--accentRGB),.2) 0 1.4px, transparent 1.4px 6px), rgba(var(--accentRGB),var(--tint));
+  box-shadow:inset 0 0 0 2px rgba(var(--accentRGB),.75)}
+.swatch.s1{--tint:.22} .swatch.s2{--tint:.38} .swatch.s3{--tint:.52}
+.swatch.sg i{background:var(--goodSoft); box-shadow:inset 0 0 0 2px var(--good)}
+.swatch.sm i{background:repeating-linear-gradient(-45deg,var(--missSoft) 0 3px,transparent 3px 9px); box-shadow:inset 0 0 0 2px var(--miss)}
+
+/* inspector */
+.inspect .sqname{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:18px; font-weight:600}
+.atk{display:flex; flex-wrap:wrap; gap:6px; margin-top:9px}
+.atk span{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12.5px; padding:3px 7px; border-radius:2px;
+  background:var(--panel2); border:1px solid var(--line2)}
+.atk span.none{background:transparent; border-style:dashed; color:var(--muted)}
+
+/* settings */
+.setrow{display:grid; gap:7px; margin-bottom:12px}
+.setrow:last-child{margin-bottom:0}
+.setrow > .lab{font-size:12px; color:var(--muted)}
+.seg{display:flex; background:var(--sunk); border:1px solid var(--line2); border-radius:3px; padding:2px; gap:2px}
+.seg input{position:absolute; opacity:0; width:0; height:0}
+.seg label{flex:1; text-align:center; font-size:13px; padding:6px 4px; border-radius:2px; cursor:pointer; color:var(--muted); white-space:nowrap}
+.seg input:checked + label{background:var(--panel); color:var(--ink); font-weight:500; box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg input:focus-visible + label{outline:2px solid var(--accent); outline-offset:-2px}
+
+/* form strip */
+.form{display:flex; gap:4px; margin-top:12px; padding-top:12px; border-top:1px solid var(--line2); flex-wrap:wrap}
+.form b{width:22px; height:22px; border-radius:2px; display:grid; place-items:center; font-family:"IBM Plex Mono",ui-monospace,monospace;
+  font-size:11px; font-weight:600; background:var(--missSoft); color:var(--miss); border:1px solid var(--miss)}
+.form b.clean{background:var(--goodSoft); color:var(--good); border-color:var(--good)}
+.form .empty{color:var(--muted); font-size:12.5px}
+
+/* rules */
+.rules summary{cursor:pointer; font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:11px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); font-weight:600}
+.rules summary:focus-visible{outline:2px solid var(--accent); outline-offset:3px}
+.rules ul{margin:11px 0 0; padding-left:18px; display:grid; gap:7px; font-size:13.5px; color:var(--ink2)}
+.rules code{font-family:"IBM Plex Mono",ui-monospace,monospace; font-size:12.5px; background:var(--panel2); padding:1px 4px; border-radius:2px}
+footer{margin-top:34px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
+@media (prefers-reduced-motion:no-preference){ .sq .mark,.sq::after{transition:opacity .09s linear} }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <p class="eyebrow">Board vision drill</p>
+    <h1>Square Pressure</h1>
+    <p class="lede">A plausible position appears and one side is named. Stamp every square that side attacks &mdash; <b>once per attacker</b>, so a square covered twice gets two taps. Defended squares count: a defence is an attack on your own piece.</p>
+  </header>
+
+  <main class="grid">
+    <section class="stack">
+      <div class="prompt">
+        <p class="tag" id="ptag">Position 1 &middot; loading</p>
+        <h2 class="ask" id="ask">&nbsp;</h2>
+        <p class="meta" id="pmeta">&nbsp;</p>
+        <div class="clock" id="clock">0:00</div>
+      </div>
+
+      <div class="board" id="board" role="grid" aria-label="Chess board; mark attacked squares"></div>
+
+      <div class="actionbar">
+        <button class="btn primary" id="btnCheck" type="button">Check <kbd>C</kbd></button>
+        <button class="btn" id="btnNext" type="button">New position <kbd>N</kbd></button>
+        <button class="btn" id="btnReveal" type="button">Reveal <kbd>R</kbd></button>
+        <button class="btn" id="btnClear" type="button">Clear</button>
+        <button class="btn" id="btnFlip" type="button">Flip <kbd>F</kbd></button>
+      </div>
+      <p class="hint">Tap a square once per attacker. Shift-click, right-click or press-and-hold takes one back. Keyboard: arrows to move, <b>space</b> to add, <b>backspace</b> to remove.</p>
+    </section>
+
+    <aside class="rail">
+      <div class="card" id="resultCard">
+        <h2>Verdict</h2>
+        <p class="headline" id="resHead">Nothing checked yet</p>
+        <p class="hint" id="resSub">Mark the squares, then check. Squares you leave blank are read as &ldquo;no attackers&rdquo;.</p>
+        <div class="tally" id="resTally" hidden>
+          <div class="row"><span>Exact counts</span><span id="tExact">&ndash;</span></div>
+          <div class="row"><span>Missed attackers</span><span id="tUnder">&ndash;</span></div>
+          <div class="row"><span>Over-counted</span><span id="tOver">&ndash;</span></div>
+          <div class="row"><span>Phantom squares</span><span id="tPhantom">&ndash;</span></div>
+        </div>
+        <div class="legend">
+          <span class="chip"><span class="swatch s1"><i></i></span>1 attacker</span>
+          <span class="chip"><span class="swatch s2"><i></i></span>2</span>
+          <span class="chip"><span class="swatch s3"><i></i></span>3+</span>
+          <span class="chip"><span class="swatch sg"><i></i></span>right</span>
+          <span class="chip"><span class="swatch sm"><i></i></span>off</span>
+        </div>
+      </div>
+
+      <div class="card inspect">
+        <h2>Square inspector</h2>
+        <p class="sqname" id="inspName">&mdash;</p>
+        <p class="hint" id="inspHint">Available once you have checked or revealed. It lists every attacker of the square, in notation.</p>
+        <div class="atk" id="inspAtk"></div>
+      </div>
+
+      <div class="card">
+        <h2>Drill settings</h2>
+        <div class="setrow">
+          <span class="lab">What to mark</span>
+          <div class="seg" role="radiogroup" aria-label="What to mark">
+            <input type="radio" name="mode" id="mode-threats" value="threats" checked><label for="mode-threats">Their threats</label>
+            <input type="radio" name="mode" id="mode-pressure" value="pressure"><label for="mode-pressure">My pressure</label>
+            <input type="radio" name="mode" id="mode-mixed" value="mixed"><label for="mode-mixed">Mixed</label>
+          </div>
+        </div>
+        <div class="setrow">
+          <span class="lab">Material</span>
+          <div class="seg" role="radiogroup" aria-label="Material">
+            <input type="radio" name="diff" id="diff-light" value="light"><label for="diff-light">Endgame</label>
+            <input type="radio" name="diff" id="diff-standard" value="standard" checked><label for="diff-standard">Middlegame</label>
+            <input type="radio" name="diff" id="diff-heavy" value="heavy"><label for="diff-heavy">Full board</label>
+          </div>
+        </div>
+        <div class="setrow">
+          <span class="lab">Area to answer for</span>
+          <div class="seg" role="radiogroup" aria-label="Area to answer for">
+            <input type="radio" name="scope" id="scope-quad" value="quad" checked><label for="scope-quad">One quadrant</label>
+            <input type="radio" name="scope" id="scope-all" value="all"><label for="scope-all">Whole board</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>This session</h2>
+        <div class="tally">
+          <div class="row"><span>Positions checked</span><span id="sPos">0</span></div>
+          <div class="row"><span>Clean sweeps</span><span id="sClean">0</span></div>
+          <div class="row"><span>Squares exact</span><span id="sAcc">&ndash;</span></div>
+          <div class="row"><span>Current streak</span><span id="sStreak">0</span></div>
+        </div>
+        <div class="form" id="formStrip"><span class="empty">Recent positions appear here.</span></div>
+      </div>
+
+      <details class="card rules">
+        <summary>How counting works</summary>
+        <ul>
+          <li>A square is attacked if the piece could capture on it. Your own pieces included &mdash; that is a defence, and it counts.</li>
+          <li>Pawns attack the two diagonal squares in front of them. A pawn push is not an attack, and an occupied diagonal still counts.</li>
+          <li>Sliders stop at the first piece in the way: a rook on <code>d1</code> behind a rook on <code>d3</code> attacks <code>d3</code> and nothing past it. No x-rays.</li>
+          <li>Pins are irrelevant. A pinned knight still attacks everything it could jump to.</li>
+          <li>The king attacks all eight neighbours, legal or not.</li>
+          <li>En passant and castling are ignored. Positions are built from real pawn structures, so the piece placement is the kind you will actually meet.</li>
+        </ul>
+      </details>
+    </aside>
+  </main>
+
+  <footer>Positions are generated from named pawn skeletons &mdash; Najdorf, Carlsbad, Mar del Plata, hedgehog, four-against-three &mdash; with pieces sampled from the squares they usually occupy in that structure. Nothing here is a puzzle to solve; it is a board to see.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ------------------------------------------------------------------ board basics */
+var FILES = "abcdefgh";
+var GLYPH = {k:"♚", q:"♛", r:"♜", b:"♝", n:"♞", p:"♟"};
+var PNAME = {k:"king", q:"queen", r:"rook", b:"bishop", n:"knight", p:"pawn"};
+var LETTER = {k:"K", q:"Q", r:"R", b:"B", n:"N", p:""};
+
+function sqName(i){ return FILES[i % 8] + (((i / 8) | 0) + 1); }
+function parseSq(s){ return (s.charCodeAt(1) - 49) * 8 + (s.charCodeAt(0) - 97); }
+function mirrorName(s){ return s.charAt(0) + (9 - (+s.charAt(1))); }
+function fileOf(i){ return i % 8; }
+function rankOf(i){ return (i / 8) | 0; }
+function other(c){ return c === "w" ? "b" : "w"; }
+
+var KNIGHT = [[1,2],[2,1],[2,-1],[1,-2],[-1,-2],[-2,-1],[-2,1],[-1,2]];
+var KINGD  = [[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1],[0,-1],[1,-1]];
+var ROOKD  = [[1,0],[-1,0],[0,1],[0,-1]];
+var BISHD  = [[1,1],[1,-1],[-1,1],[-1,-1]];
+
+/* Every square `color` attacks, with the attacker list for each. */
+function computeAttacks(board, color){
+  var counts = new Int16Array(64);
+  var by = []; for (var z = 0; z < 64; z++) by.push([]);
+  for (var i = 0; i < 64; i++){
+    var p = board[i];
+    if (!p || p.c !== color) continue;
+    var f = fileOf(i), r = rankOf(i);
+    var add = function(ff, rr){
+      if (ff < 0 || ff > 7 || rr < 0 || rr > 7) return false;
+      var j = rr * 8 + ff;
+      counts[j]++; by[j].push(i);
+      return !board[j];                       /* sliders stop on the first piece */
+    };
+    if (p.t === "p"){
+      var d = color === "w" ? 1 : -1;
+      add(f - 1, r + d); add(f + 1, r + d);
+    } else if (p.t === "n"){
+      for (var a = 0; a < 8; a++) add(f + KNIGHT[a][0], r + KNIGHT[a][1]);
+    } else if (p.t === "k"){
+      for (var b2 = 0; b2 < 8; b2++) add(f + KINGD[b2][0], r + KINGD[b2][1]);
+    } else {
+      var dirs = p.t === "r" ? ROOKD : p.t === "b" ? BISHD : ROOKD.concat(BISHD);
+      for (var d2 = 0; d2 < dirs.length; d2++){
+        var ff = f + dirs[d2][0], rr = r + dirs[d2][1];
+        while (add(ff, rr)){ ff += dirs[d2][0]; rr += dirs[d2][1]; }
+      }
+    }
+  }
+  return {counts:counts, by:by};
+}
+
+/* ------------------------------------------------------------------ randomness */
+function rnd(n){ return Math.floor(Math.random() * n); }
+function pick(arr){ return arr[rnd(arr.length)]; }
+function pickW(entries){
+  var t = 0, k;
+  for (k = 0; k < entries.length; k++) t += entries[k][1];
+  var r = Math.random() * t;
+  for (k = 0; k < entries.length; k++){ r -= entries[k][1]; if (r <= 0) return entries[k][0]; }
+  return entries[entries.length - 1][0];
+}
+function parseTable(str){
+  return str.trim().split(/\s+/).map(function(tok){
+    var bits = tok.split(":");
+    return [bits[0], bits[1] ? +bits[1] : 1];
+  });
+}
+
+/* ------------------------------------------------------------------ pawn skeletons
+   Real structures, not random pawns. Each carries the squares its pieces habitually go to. */
+var STRUCTURES = [
+ {name:"Sicilian Najdorf centre", freq:1.4,
+  w:"a2 b2 c2 e4 f2 g2 h2", b:"a6 b7 d6 e6 f7 g7 h7",
+  cw:{k:.45,q:.45,none:.10}, cb:{k:.8,q:.05,none:.15},
+  hw:{n:["d4","c3","f3"], b:["e3","e2","g5","d3"], r:["d1","e1","f1"], q:["d2","e2","f3"]},
+  hb:{n:["f6","d7","c6","c5"], b:["e7","b7","d7"], r:["c8","e8","f8"], q:["c7","a5","b6"]}},
+
+ {name:"Dragon, Yugoslav attack", freq:.9,
+  w:"a2 b2 c2 e4 f3 g2 h4", b:"a7 b7 d6 e7 f7 g6 h7",
+  cw:{q:.75,k:.15,none:.10}, cb:{k:.9,q:.02,none:.08},
+  hw:{n:["d4","c3"], b:["e3","c4","h6"], r:["d1","h1","c1"], q:["d2","e2"]},
+  hb:{n:["f6","c6","e5"], b:["g7","d7","e6"], r:["c8","e8","b8"], q:["a5","c7","d7"]}},
+
+ {name:"Carlsbad structure", freq:1.3,
+  w:"a2 b2 c3 d4 e3 f2 g2 h2", b:"a7 b7 c6 d5 e6 f7 g7 h7",
+  cw:{k:.85,q:.05,none:.10}, cb:{k:.85,q:.05,none:.10},
+  hw:{n:["f3","e5","d2","e2"], b:["d3","g5","f4"], r:["b1","c1","a1","e1"], q:["c2","b3","d3"]},
+  hb:{n:["f6","d7","e4","g6"], b:["e7","d6","f5","b7"], r:["e8","a8","c8","b8"], q:["c7","b6","e7"]}},
+
+ {name:"Isolated queen's pawn", freq:1.1,
+  w:"a2 b2 d4 f2 g2 h2", b:"a7 b7 e6 f7 g7 h7",
+  cw:{k:.9,none:.1}, cb:{k:.9,none:.1},
+  hw:{n:["e5","c3","f3","g5"], b:["d3","g5","c2","e3"], r:["d1","e1","c1"], q:["d3","e2","c2"]},
+  hb:{n:["f6","d5","c6","d7"], b:["e7","b7","d6","b4"], r:["c8","d8","e8"], q:["c7","b6","d6"]}},
+
+ {name:"King's Indian, Mar del Plata", freq:1.0,
+  w:"a2 b2 c4 d5 e4 f3 g2 h2", b:"a7 b7 c7 d6 e5 f5 g6 h7",
+  cw:{k:.75,q:.1,none:.15}, cb:{k:.95,none:.05},
+  hw:{n:["c3","d3","e2","b5"], b:["e3","d2","g5"], r:["c1","f1","b1"], q:["c2","d2","b3"]},
+  hb:{n:["f6","d7","h5"], b:["g7","d7","h6"], r:["f7","f8","a8"], q:["e8","d8","e7"]}},
+
+ {name:"French advance", freq:.9,
+  w:"a2 b2 c3 d4 e5 f2 g2 h2", b:"a7 b7 c5 d5 e6 f7 g7 h7",
+  cw:{k:.7,q:.1,none:.2}, cb:{k:.5,q:.15,none:.35},
+  hw:{n:["f3","d2","a3"], b:["d3","e3","e2"], r:["c1","e1","f1"], q:["d2","e2","b3"]},
+  hb:{n:["c6","e7","h6"], b:["d7","e7","b7"], r:["c8","f8","b8"], q:["b6","c7","a5"]}},
+
+ {name:"Closed Ruy Lopez", freq:1.4,
+  w:"a2 b2 c3 d4 e4 f2 g2 h3", b:"a6 b5 c5 d6 e5 f7 g7 h7",
+  cw:{k:.92,none:.08}, cb:{k:.92,none:.08},
+  hw:{n:["f3","d2","f1","g3"], b:["b3","c2","e3","g5"], r:["e1","d1","a1"], q:["e2","d3","c2"]},
+  hb:{n:["f6","d7","c6","b6"], b:["b7","e6","e7","g4"], r:["e8","c8","a8"], q:["c7","d7","b6"]}},
+
+ {name:"Caro-Kann classical", freq:1.0,
+  w:"a2 b2 c2 d4 f2 g2 h4", b:"a7 b7 c6 e6 f7 g7 h7",
+  cw:{k:.45,q:.45,none:.10}, cb:{k:.5,q:.3,none:.2},
+  hw:{n:["f3","e5","d2","e4"], b:["d3","f4","e3","c4"], r:["d1","e1","h1"], q:["e2","d2","d3"]},
+  hb:{n:["f6","d7","b6"], b:["d6","e7","f5"], r:["c8","d8","e8"], q:["c7","a5","b6"]}},
+
+ {name:"Semi-Slav", freq:1.2,
+  w:"a2 b2 c4 d4 e3 f2 g2 h2", b:"a7 b7 c6 d5 e6 f7 g7 h7",
+  cw:{k:.8,q:.05,none:.15}, cb:{k:.65,q:.1,none:.25},
+  hw:{n:["f3","c3","e5"], b:["d3","g5","d2","e2"], r:["c1","d1","e1"], q:["c2","b3","e2"]},
+  hb:{n:["f6","d7","e4"], b:["d6","e7","b7"], r:["c8","e8","d8"], q:["c7","e7","a5"]}},
+
+ {name:"Hedgehog", freq:.8,
+  w:"a2 b2 c4 e4 f2 g2 h2", b:"a6 b6 d6 e6 f7 g7 h7",
+  cw:{k:.85,none:.15}, cb:{k:.9,none:.1},
+  hw:{n:["c3","d4","f3"], b:["e2","g2","e3","b2"], r:["c1","d1","e1"], q:["d2","e2","c2"]},
+  hb:{n:["f6","d7","c5"], b:["b7","e7","d7"], r:["c8","e8","b8"], q:["c7","b8","a8"]}},
+
+ {name:"Modern Benoni", freq:.8,
+  w:"a2 b2 c4 d5 e4 f2 g2 h2", b:"a7 b7 d6 f7 g6 h7",
+  cw:{k:.8,none:.2}, cb:{k:.95,none:.05},
+  hw:{n:["c3","f3","d2"], b:["e2","d3","f4","g5"], r:["e1","a1","b1"], q:["e2","c2","a4"]},
+  hb:{n:["f6","d7","a6"], b:["g7","f5","d7"], r:["e8","b8","a7"], q:["e7","c7","a5"]}},
+
+ {name:"Grünfeld exchange", freq:.9,
+  w:"a2 b2 c3 d4 e4 f2 g2 h2", b:"a7 b7 c5 e7 f7 g6 h7",
+  cw:{k:.6,q:.15,none:.25}, cb:{k:.9,none:.1},
+  hw:{n:["f3","e2","d2"], b:["e3","c4","b5","g5"], r:["c1","d1","b1"], q:["d2","a4","b3"]},
+  hb:{n:["c6","d7","a5"], b:["g7","g4","e6"], r:["c8","d8","e8"], q:["a5","c7","d7"]}},
+
+ {name:"Stonewall Dutch", freq:.7,
+  w:"a2 b2 c4 d4 e3 f2 g3 h2", b:"a7 b7 c6 d5 e6 f5 g7 h7",
+  cw:{k:.9,none:.1}, cb:{k:.9,none:.1},
+  hw:{n:["f3","d2","e5"], b:["g2","b2","d2","a3"], r:["c1","e1","f1"], q:["c2","b3","d3"]},
+  hb:{n:["f6","d7","e4"], b:["d6","b7","e7"], r:["e8","f8","a8"], q:["e8","e7","f6"]}},
+
+ {name:"Botvinnik English", freq:.8,
+  w:"a2 b2 c4 d3 e4 f2 g3 h2", b:"a7 b7 c5 d6 e5 f7 g6 h7",
+  cw:{k:.9,none:.1}, cb:{k:.9,none:.1},
+  hw:{n:["c3","e2","d5"], b:["g2","e3","d2"], r:["b1","c1","e1"], q:["d2","c2","a4"]},
+  hb:{n:["c6","e7","d4"], b:["g7","e6","d7"], r:["b8","c8","e8"], q:["d7","a5","c7"]}}
+];
+
+var ENDGAMES = [
+ {name:"Four against three on the kingside", w:"e4 f2 g2 h2", b:"f7 g7 h7"},
+ {name:"Symmetrical five against five", w:"a2 b2 f2 g2 h2", b:"a7 b7 f7 g7 h7"},
+ {name:"Outside passer against the majority", w:"a4 c3 f2 g2 h2", b:"c7 f7 g7 h6"},
+ {name:"Connected passers against a blockade", w:"d5 e4 g2 h2", b:"c6 f7 g7 h7"},
+ {name:"Queenside majority", w:"a2 b2 c3 g2 h2", b:"a7 c7 f7 g7"},
+ {name:"Doubled f-pawns", w:"a2 f2 f3 g2 h2", b:"a7 e6 f7 g7 h7"}
+];
+
+/* Generic square habits, written from White's side and mirrored for Black. */
+var GENERIC = {
+  n:"f3:7 c3:7 d2:3 e2:2.5 d4:3 e5:3 c4:2 d5:2 f5:1.5 b3:1 g3:1 b5:1 e4:2 a4:.4 h4:.4 g5:1 f4:.8 c5:.8",
+  b:"e2:3 d3:3 c4:3 g5:3 e3:3 f4:2 b5:2 g2:2.5 b2:2 d2:2 f1:.6 c1:.6 b3:1 a3:1 h3:.6 e5:.8 d4:.8 h4:.7 f6:.3",
+  r:"e1:5 d1:5 f1:3 a1:3 c1:3 b1:2 h1:1.5 e2:1 d2:1 c2:.8 a2:.6 d7:1 e7:.8 c7:.6 a5:.4 a3:.5 b3:.4 d3:.5 e3:.5 f3:.3",
+  q:"d1:4 e2:3 c2:3 d2:3 b3:2 f3:2 d3:2 e1:1 a4:1 h5:.8 g3:.6 b6:.5 c7:.5 d4:1 e3:1 f4:.6 a5:.5",
+  k:"g1:6 c1:2 b1:1.5 e1:2 h1:1 f1:.6 d1:.4 e2:.3"
+};
+var GENERIC_END = {
+  n:"e5:2 d5:2 f5:2 c5:2 d4:2 e4:2 f4:1.5 c4:1.5 f3:1.5 c3:1.5 d3:1.5 e3:1.5 b5:1 g5:1 d6:1 e6:1 f6:.8",
+  b:"e5:1.5 d4:1.5 c4:1.5 f4:1.5 e3:1.5 d3:1.5 g2:1 b2:1 c5:1 f5:1 b5:1 g5:1 d6:1 e6:1 h4:.8 a4:.8 f6:.8",
+  r:"d1:2 e1:2 a1:1.5 c7:2 d7:2 e7:2 b7:1.5 a7:1.5 f7:1 d5:1.5 e5:1.5 a5:1.2 b5:1 d2:1 e2:1 h1:1 c1:1.2 a3:1 b3:1 f1:1 a2:1.2",
+  q:"d4:1.5 e4:1.5 d5:1.2 e5:1.2 c4:1 f4:1 d2:1.2 e2:1.2 b3:1 g3:1 c6:.8 f6:.8 a4:.8 h4:.8 d1:1 e1:1 b7:.6",
+  k:"e3:2 d3:2 f2:2 g2:2 e2:2 d2:2 f3:2 c3:1.5 g3:1.5 e4:1.2 d4:1.2 h2:1 b2:1 c4:.8 f4:.8 g1:1.2 c1:.8 f1:1"
+};
+var KING_HOME = {
+  k:[["g1",7],["h1",1.2],["g1",0]],
+  q:[["c1",5],["b1",3]],
+  none:[["e1",6],["f1",1],["d1",.8],["e2",.4]]
+};
+var ROOK_HOME = { k:["f1","e1","d1"], q:["d1","e1","c1"], none:["d1","e1","c1"] };
+
+/* ------------------------------------------------------------------ position building */
+function sideSquares(list, color){
+  return list.map(function(s){ return color === "w" ? s : mirrorName(s); });
+}
+function squareParity(i){ return (fileOf(i) + rankOf(i)) % 2; }
+
+function placePiece(board, t, color, hints, endgame, bishopParities){
+  var entries = [], seen = {};
+  var push = function(name, w){
+    var i = parseSq(name);
+    if (board[i]) return;
+    if (t === "b" && bishopParities.indexOf(squareParity(i)) !== -1) return;
+    if (seen[name] != null){ entries[seen[name]][1] += w; return; }
+    seen[name] = entries.length;
+    entries.push([i, w]);
+  };
+  if (hints) hints.forEach(function(s, k){ push(s, Math.max(1.8, 6 - k * 1.3)); });
+  var table = parseTable((endgame ? GENERIC_END : GENERIC)[t]);
+  table.forEach(function(row){
+    push(color === "w" ? row[0] : mirrorName(row[0]), row[1] * (hints ? .75 : 1));
+  });
+  if (!entries.length) return false;
+  var idx = pickW(entries);
+  board[idx] = {t:t, c:color};
+  if (t === "b") bishopParities.push(squareParity(idx));
+  return true;
+}
+
+function materialFor(diff){
+  var full = ["q","r","r","b","b","n","n"];
+  function drop(arr, t){ var k = arr.indexOf(t); if (k >= 0) arr.splice(k, 1); return arr; }
+  if (diff === "heavy"){
+    var wh = full.slice(), bh = full.slice();
+    if (Math.random() < .35){ drop(wh, "n"); drop(bh, "n"); }
+    return {w:wh, b:bh};
+  }
+  if (diff === "standard"){
+    var ws = full.slice(), bs = full.slice();
+    if (Math.random() < .5){ drop(ws, "q"); drop(bs, "q"); }
+    if (Math.random() < .45){ drop(ws, "r"); drop(bs, "r"); }
+    var trades = 1 + rnd(2);
+    for (var k = 0; k < trades; k++){
+      var t1 = Math.random() < .5 ? "n" : "b";
+      var t2 = Math.random() < .7 ? t1 : (t1 === "n" ? "b" : "n");
+      drop(ws, t1); drop(bs, t2);
+    }
+    return {w:ws, b:bs};
+  }
+  var schemes = [
+    [["r"],["r"]], [["r","b"],["r","n"]], [["q"],["q"]], [["n"],["b"]],
+    [["r","r"],["r","r"]], [["b"],["b"]], [["r","n"],["r","b"]],
+    [["q","n"],["q","b"]], [["r"],["n"]], [["b","n"],["n","n"]], [["r","b"],["r","b"]]
+  ];
+  var s = pick(schemes);
+  return {w:s[0].slice(), b:s[1].slice()};
+}
+
+function trimPawns(list, n){
+  var out = list.slice();
+  while (n-- > 0 && out.length > 2) out.splice(rnd(out.length), 1);
+  return out;
+}
+
+function tryBuild(diff){
+  var endgame = diff === "light";
+  var skel, label;
+  if (endgame){ skel = pick(ENDGAMES); label = skel.name; }
+  else {
+    skel = pickW(STRUCTURES.map(function(s){ return [s, s.freq]; }));
+    label = skel.name;
+  }
+  var board = new Array(64); for (var z = 0; z < 64; z++) board[z] = null;
+
+  var wp = skel.w.split(" "), bp = skel.b.split(" ");
+  if (diff === "standard"){ wp = trimPawns(wp, rnd(3)); bp = trimPawns(bp, rnd(3)); }
+  if (diff === "heavy"){ wp = trimPawns(wp, rnd(2)); bp = trimPawns(bp, rnd(2)); }
+  wp.forEach(function(s){ board[parseSq(s)] = {t:"p", c:"w"}; });
+  bp.forEach(function(s){ board[parseSq(s)] = {t:"p", c:"b"}; });
+
+  var castle = {w:"none", b:"none"};
+  if (!endgame){
+    castle.w = pickW(Object.keys(skel.cw).map(function(k){ return [k, skel.cw[k]]; }));
+    castle.b = pickW(Object.keys(skel.cb).map(function(k){ return [k, skel.cb[k]]; }));
+  }
+
+  var mat = materialFor(diff);
+  var colors = ["w","b"];
+  for (var c = 0; c < 2; c++){
+    var col = colors[c];
+    var kingHints = endgame ? null : sideSquares(KING_HOME[castle[col]].map(function(e){ return e[0]; }), col);
+    if (!placePiece(board, "k", col, kingHints, endgame, [])) return null;
+  }
+  for (var c2 = 0; c2 < 2; c2++){
+    var col2 = colors[c2];
+    var hints = endgame ? {} : (col2 === "w" ? skel.hw : skel.hb);
+    var parities = [];
+    var list = mat[col2].slice();
+    var firstRook = true;
+    for (var m = 0; m < list.length; m++){
+      var t = list[m];
+      var h = hints[t] ? hints[t].slice() : null;
+      if (t === "r" && firstRook && !endgame){
+        h = sideSquares(ROOK_HOME[castle[col2]], col2).concat(h || []);
+        firstRook = false;
+      }
+      if (!placePiece(board, t, col2, h, endgame, parities)) return null;
+    }
+  }
+
+  var wa = computeAttacks(board, "w"), ba = computeAttacks(board, "b");
+  var wk = -1, bk = -1;
+  for (var i = 0; i < 64; i++){
+    if (board[i] && board[i].t === "k") { if (board[i].c === "w") wk = i; else bk = i; }
+  }
+  if (wk < 0 || bk < 0) return null;
+  var wInCheck = ba.counts[wk] > 0, bInCheck = wa.counts[bk] > 0;
+  if (wInCheck && bInCheck) return null;
+  var stm = wInCheck ? "w" : bInCheck ? "b" : (Math.random() < .5 ? "w" : "b");
+
+  return {board:board, stm:stm, label:label, wa:wa, ba:ba, endgame:endgame};
+}
+
+function buildPosition(diff){
+  for (var t = 0; t < 120; t++){
+    var p = tryBuild(diff);
+    if (p) return p;
+  }
+  return tryBuild("light") || null;
+}
+
+/* ------------------------------------------------------------------ state */
+var S = {
+  board:null, stm:"w", target:"w", label:"", truth:null, guesses:new Int16Array(64),
+  scope:null, phase:"guess", flip:false, sel:-1, n:0, started:0, timer:null, focus:28
+};
+var STATS = {pos:0, clean:0, exact:0, total:0, streak:0, form:[]};
+
+function loadStats(){
+  try {
+    var raw = localStorage.getItem("squarePressure.v1");
+    if (raw){ var o = JSON.parse(raw); if (o && typeof o === "object") STATS = {
+      pos:o.pos|0, clean:o.clean|0, exact:o.exact|0, total:o.total|0, streak:o.streak|0,
+      form:Array.isArray(o.form) ? o.form.slice(-10) : []
+    }; }
+  } catch (e){}
+}
+function saveStats(){
+  try { localStorage.setItem("squarePressure.v1", JSON.stringify(STATS)); } catch (e){}
+}
+
+/* ------------------------------------------------------------------ dom */
+var boardEl  = document.getElementById("board");
+var askEl    = document.getElementById("ask");
+var ptagEl   = document.getElementById("ptag");
+var pmetaEl  = document.getElementById("pmeta");
+var clockEl  = document.getElementById("clock");
+var resHead  = document.getElementById("resHead");
+var resSub   = document.getElementById("resSub");
+var resTally = document.getElementById("resTally");
+var inspName = document.getElementById("inspName");
+var inspHint = document.getElementById("inspHint");
+var inspAtk  = document.getElementById("inspAtk");
+
+function setting(name){
+  var el = document.querySelector('input[name="' + name + '"]:checked');
+  return el ? el.value : null;
+}
+
+/* ------------------------------------------------------------------ rendering */
+function paintSquare(btn, i){
+  var g = S.guesses[i], t = S.truth ? S.truth.counts[i] : 0;
+  var cls = "sq " + (squareParity(i) ? "l" : "d");
+  if (S.scope && !S.scope.has(i)) cls += " out";
+  if (g > 0) cls += " m" + Math.min(5, g);
+  var judged = S.phase !== "guess" && (!S.scope || S.scope.has(i));
+  if (judged && (t > 0 || g > 0)) cls += " judged " + (t === g ? "ok" : "bad");
+  if (i === S.sel) cls += " sel";
+  btn.className = cls;
+
+  var p = S.board[i];
+  var html = '<span class="mark"></span>';
+  if (p) html += '<span class="glyph ' + p.c + '">' + GLYPH[p.t] + "</span>";
+  html += '<span class="cnt">' + (g > 0 ? g : "") + "</span>";
+  if (judged && (t > 0 || g > 0)){
+    html += '<span class="verdict">' + t + (t === g ? "" : "<i>" + g + "</i>") + "</span>";
+  }
+  var f = fileOf(i), r = rankOf(i);
+  var edgeRank = S.flip ? 7 : 0, edgeFile = S.flip ? 7 : 0;
+  if (f === edgeFile) html += '<span class="coord">' + (r + 1) + "</span>";
+  if (r === edgeRank) html += '<span class="coord fl">' + FILES[f] + "</span>";
+  btn.innerHTML = html;
+
+  var lab = sqName(i) + (p ? ", " + (p.c === "w" ? "white " : "black ") + PNAME[p.t] : ", empty");
+  lab += g > 0 ? ", marked " + g : "";
+  if (judged) lab += ", actual " + t;
+  btn.setAttribute("aria-label", lab);
+}
+
+function renderBoard(){
+  var order = [], r, f;
+  for (r = 7; r >= 0; r--) for (f = 0; f < 8; f++) order.push(r * 8 + f);
+  if (S.flip) order.reverse();
+  var frag = document.createDocumentFragment();
+  for (var k = 0; k < order.length; k++){
+    var i = order[k];
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.setAttribute("data-i", i);
+    btn.tabIndex = i === S.focus ? 0 : -1;
+    paintSquare(btn, i);
+    frag.appendChild(btn);
+  }
+  boardEl.innerHTML = "";
+  boardEl.appendChild(frag);
+}
+function squareEl(i){ return boardEl.querySelector('[data-i="' + i + '"]'); }
+function repaint(i){ var el = squareEl(i); if (el) paintSquare(el, i); }
+
+function fmtTime(ms){
+  var s = Math.floor(ms / 1000);
+  return Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2);
+}
+function tick(){ clockEl.textContent = fmtTime(Date.now() - S.started); }
+function startClock(){
+  S.started = Date.now(); tick();
+  if (S.timer) clearInterval(S.timer);
+  S.timer = setInterval(tick, 1000);
+}
+function stopClock(){ if (S.timer){ clearInterval(S.timer); S.timer = null; } }
+
+function renderStats(){
+  document.getElementById("sPos").textContent = STATS.pos;
+  document.getElementById("sClean").textContent = STATS.clean;
+  document.getElementById("sAcc").textContent = STATS.total
+    ? Math.round(100 * STATS.exact / STATS.total) + "%" : "–";
+  document.getElementById("sStreak").textContent = STATS.streak;
+  var strip = document.getElementById("formStrip");
+  if (!STATS.form.length){ strip.innerHTML = '<span class="empty">Recent positions appear here.</span>'; return; }
+  strip.innerHTML = STATS.form.map(function(v){
+    return '<b class="' + (v === 0 ? "clean" : "") + '" title="' +
+      (v === 0 ? "clean sweep" : v + " square" + (v === 1 ? "" : "s") + " off") + '">' +
+      (v === 0 ? "✓" : v) + "</b>";
+  }).join("");
+}
+
+function renderPrompt(){
+  var sideWord = S.target === "w" ? "White" : "Black";
+  var mine = S.target === S.stm;
+  ptagEl.textContent = "Position " + S.n + " · " + S.label;
+  askEl.innerHTML = "Mark every square <span class=\"side\">" + sideWord + "</span> attacks";
+  var pieces = 0;
+  for (var i = 0; i < 64; i++) if (S.board[i]) pieces++;
+  pmetaEl.textContent = (S.stm === "w" ? "White" : "Black") + " to move · " +
+    (mine ? "your own pressure" : "the threats against you") + " · " + pieces + " pieces · " +
+    (S.scope ? "quadrant " + quadLabel() : "whole board");
+}
+function quadLabel(){
+  var files = "", ranks = "";
+  var min = 99, max = -1;
+  S.scope.forEach(function(i){ if (i < min) min = i; if (i > max) max = i; });
+  files = FILES[fileOf(min)] + "–" + FILES[fileOf(max)];
+  ranks = (rankOf(min) + 1) + "–" + (rankOf(max) + 1);
+  return files + " / " + ranks;
+}
+
+/* ------------------------------------------------------------------ puzzle flow */
+function chooseScope(truth){
+  if (setting("scope") === "all") return null;
+  var quads = [], qf, qr;
+  for (qf = 0; qf < 2; qf++) for (qr = 0; qr < 2; qr++){
+    var set = new Set(), live = 0;
+    for (var f = qf * 4; f < qf * 4 + 4; f++)
+      for (var r = qr * 4; r < qr * 4 + 4; r++){
+        var i = r * 8 + f; set.add(i);
+        if (truth.counts[i] > 0) live++;
+      }
+    quads.push([set, live]);
+  }
+  quads.sort(function(a, b){ return b[1] - a[1]; });
+  var best = quads.filter(function(q){ return q[1] >= 4; });
+  if (!best.length) best = quads;
+  return pick(best.slice(0, 3))[0];
+}
+
+function newPosition(){
+  var diff = setting("diff");
+  var pos = buildPosition(diff);
+  if (!pos) return;
+  var mode = setting("mode");
+  var target;
+  if (mode === "pressure") target = pos.stm;
+  else if (mode === "threats") target = other(pos.stm);
+  else target = Math.random() < .5 ? pos.stm : other(pos.stm);
+
+  var truth = target === "w" ? pos.wa : pos.ba;
+  var scope = chooseScope(truth);
+  var live = 0;
+  for (var i = 0; i < 64; i++) if (truth.counts[i] > 0 && (!scope || scope.has(i))) live++;
+  if (live < 4) return newPosition();
+
+  S.board = pos.board; S.stm = pos.stm; S.target = target; S.label = pos.label;
+  S.truth = truth; S.guesses = new Int16Array(64); S.scope = scope;
+  S.phase = "guess"; S.sel = -1; S.n++;
+  S.focus = scope ? Math.min.apply(null, Array.from(scope)) + 9 : 28;
+  if (!scope || !scope.has(S.focus)) S.focus = scope ? Array.from(scope)[0] : 28;
+
+  renderBoard(); renderPrompt(); startClock();
+  resHead.className = "headline";
+  resHead.textContent = "Nothing checked yet";
+  resSub.textContent = "Squares you leave blank are read as “no attackers”.";
+  resTally.hidden = true;
+  document.getElementById("btnCheck").disabled = false;
+  inspName.textContent = "—";
+  inspHint.textContent = "Available once you have checked or revealed. It lists every attacker of the square, in notation.";
+  inspAtk.innerHTML = "";
+}
+
+function scopeList(){
+  var out = [];
+  for (var i = 0; i < 64; i++) if (!S.scope || S.scope.has(i)) out.push(i);
+  return out;
+}
+
+function check(){
+  if (S.phase !== "guess") return;
+  stopClock();
+  var exact = 0, under = 0, over = 0, phantom = 0, relevant = 0, missSquares = 0;
+  scopeList().forEach(function(i){
+    var t = S.truth.counts[i], g = S.guesses[i];
+    if (t > 0) relevant++;
+    if (t === g){ if (t > 0 || g > 0) exact++; }
+    else {
+      missSquares++;
+      if (t === 0) phantom++;
+      else if (g < t) under += t - g;
+      else over += g - t;
+    }
+  });
+  S.phase = "checked";
+  renderBoard();
+
+  var clean = missSquares === 0;
+  STATS.pos++; STATS.exact += exact; STATS.total += Math.max(relevant, exact + missSquares);
+  if (clean){ STATS.clean++; STATS.streak++; } else STATS.streak = 0;
+  STATS.form.push(missSquares); STATS.form = STATS.form.slice(-10);
+  saveStats(); renderStats();
+
+  resHead.className = "headline " + (clean ? "win" : "lose");
+  resHead.textContent = clean
+    ? (STATS.streak > 1 ? "Clean sweep × " + STATS.streak : "Clean sweep")
+    : missSquares + " square" + (missSquares === 1 ? "" : "s") + " off";
+  resSub.textContent = clean
+    ? "Every attacker accounted for in " + fmtTime(Date.now() - S.started) + "."
+    : "Blue squares show the real count; your mark is struck through. Tap one to see its attackers.";
+  resTally.hidden = false;
+  document.getElementById("tExact").textContent = exact + " / " + relevant;
+  document.getElementById("tUnder").textContent = under;
+  document.getElementById("tOver").textContent = over;
+  document.getElementById("tPhantom").textContent = phantom;
+  document.getElementById("btnCheck").disabled = true;
+  inspHint.textContent = "Tap any square to list its attackers.";
+}
+
+function reveal(){
+  if (S.phase === "checked") return;
+  stopClock();
+  S.phase = "revealed";
+  scopeList().forEach(function(i){ S.guesses[i] = S.truth.counts[i]; });
+  renderBoard();
+  resHead.className = "headline";
+  resHead.textContent = "Answer shown";
+  resSub.textContent = "Not scored. Tap a square to see which pieces cover it.";
+  resTally.hidden = true;
+  document.getElementById("btnCheck").disabled = true;
+  inspHint.textContent = "Tap any square to list its attackers.";
+  STATS.streak = 0; saveStats(); renderStats();
+}
+
+/* ------------------------------------------------------------------ interaction */
+function bump(i, d){
+  if (S.phase !== "guess") return;
+  if (S.scope && !S.scope.has(i)) return;
+  var v = S.guesses[i] + d;
+  if (v < 0) v = 0; if (v > 9) v = 9;
+  S.guesses[i] = v;
+  repaint(i);
+}
+function selectSquare(i){
+  if (S.phase === "guess") return;
+  S.sel = S.sel === i ? -1 : i;
+  renderBoard();
+  if (S.sel < 0){ inspName.textContent = "—"; inspAtk.innerHTML = ""; return; }
+  inspName.textContent = sqName(i);
+  var list = S.truth.by[i];
+  var sideWord = S.target === "w" ? "White" : "Black";
+  inspHint.textContent = list.length
+    ? sideWord + " covers it " + list.length + (list.length === 1 ? " time" : " times") + "."
+    : sideWord + " does not touch this square.";
+  inspAtk.innerHTML = list.length
+    ? list.map(function(j){ return "<span>" + LETTER[S.board[j].t] + sqName(j) + "</span>"; }).join("")
+    : '<span class="none">no attackers</span>';
+}
+
+var pressTimer = null, suppressClick = false;
+boardEl.addEventListener("pointerdown", function(e){
+  var btn = e.target.closest ? e.target.closest(".sq") : null;
+  if (!btn) return;
+  var i = +btn.getAttribute("data-i");
+  pressTimer = setTimeout(function(){ suppressClick = true; bump(i, -1); }, 480);
+});
+["pointerup","pointerleave","pointercancel"].forEach(function(ev){
+  boardEl.addEventListener(ev, function(){ if (pressTimer){ clearTimeout(pressTimer); pressTimer = null; } });
+});
+boardEl.addEventListener("click", function(e){
+  var btn = e.target.closest ? e.target.closest(".sq") : null;
+  if (!btn) return;
+  if (suppressClick){ suppressClick = false; return; }
+  var i = +btn.getAttribute("data-i");
+  S.focus = i;
+  if (S.phase !== "guess"){ selectSquare(i); return; }
+  bump(i, e.shiftKey || e.altKey ? -1 : 1);
+});
+boardEl.addEventListener("contextmenu", function(e){
+  var btn = e.target.closest ? e.target.closest(".sq") : null;
+  if (!btn) return;
+  e.preventDefault();
+  bump(+btn.getAttribute("data-i"), -1);
+});
+boardEl.addEventListener("keydown", function(e){
+  var btn = e.target.closest ? e.target.closest(".sq") : null;
+  if (!btn) return;
+  var i = +btn.getAttribute("data-i"), f = fileOf(i), r = rankOf(i), s = S.flip ? -1 : 1;
+  var moved = -1;
+  if (e.key === "ArrowLeft")  moved = f - s >= 0 && f - s < 8 ? r * 8 + (f - s) : -1;
+  else if (e.key === "ArrowRight") moved = f + s >= 0 && f + s < 8 ? r * 8 + (f + s) : -1;
+  else if (e.key === "ArrowUp")    moved = r + s >= 0 && r + s < 8 ? (r + s) * 8 + f : -1;
+  else if (e.key === "ArrowDown")  moved = r - s >= 0 && r - s < 8 ? (r - s) * 8 + f : -1;
+  else if (e.key === " " || e.key === "Enter"){
+    e.preventDefault();
+    if (S.phase === "guess") bump(i, e.shiftKey ? -1 : 1); else selectSquare(i);
+    return;
+  } else if (e.key === "Backspace" || e.key === "Delete"){
+    e.preventDefault(); bump(i, -1); return;
+  } else return;
+  e.preventDefault();
+  if (moved < 0) return;
+  S.focus = moved;
+  var target = squareEl(moved);
+  if (target){
+    boardEl.querySelectorAll(".sq").forEach(function(el){ el.tabIndex = -1; });
+    target.tabIndex = 0; target.focus();
+  }
+});
+
+document.getElementById("btnCheck").addEventListener("click", check);
+document.getElementById("btnReveal").addEventListener("click", reveal);
+document.getElementById("btnNext").addEventListener("click", newPosition);
+document.getElementById("btnFlip").addEventListener("click", function(){ S.flip = !S.flip; renderBoard(); });
+document.getElementById("btnClear").addEventListener("click", function(){
+  if (S.phase !== "guess") return;
+  S.guesses = new Int16Array(64); renderBoard();
+});
+document.querySelectorAll('input[name="mode"], input[name="diff"], input[name="scope"]').forEach(function(el){
+  el.addEventListener("change", newPosition);
+});
+document.addEventListener("keydown", function(e){
+  if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if (e.target && e.target.classList && e.target.classList.contains("sq")) return;
+  var k = e.key.toLowerCase();
+  if (k === "c"){ check(); } else if (k === "n"){ newPosition(); }
+  else if (k === "r"){ reveal(); } else if (k === "f"){ S.flip = !S.flip; renderBoard(); }
+});
+
+/* ------------------------------------------------------------------ boot */
+function encode(){
+  var s = "";
+  for (var i = 0; i < 64; i++){
+    var p = S.board[i];
+    s += p ? (p.c === "w" ? p.t.toUpperCase() : p.t) : ".";
+  }
+  return s;
+}
+function decode(s){
+  var b = new Array(64);
+  for (var i = 0; i < 64; i++){
+    var ch = s.charAt(i);
+    b[i] = ch === "." ? null : {t:ch.toLowerCase(), c:ch === ch.toUpperCase() ? "w" : "b"};
+  }
+  return b;
+}
+
+function start(saved){
+  loadStats(); renderStats();
+  if (saved && saved.board){
+    try {
+      S.board = decode(saved.board); S.stm = saved.stm; S.target = saved.target;
+      S.label = saved.label; S.n = saved.n || 1; S.flip = !!saved.flip;
+      S.truth = computeAttacks(S.board, S.target);
+      S.guesses = Int16Array.from(saved.guesses || []);
+      if (S.guesses.length !== 64) S.guesses = new Int16Array(64);
+      S.scope = saved.scope ? new Set(saved.scope) : null;
+      S.phase = saved.phase || "guess";
+      renderBoard(); renderPrompt();
+      if (S.phase === "guess"){ startClock(); } else { document.getElementById("btnCheck").disabled = true; }
+      return;
+    } catch (e){}
+  }
+  newPosition();
+}
+if (window.claude && window.claude.hot && window.claude.hot.snapshot){
+  window.claude.hot.snapshot(function(){
+    return {board:S.board ? encode() : null, stm:S.stm, target:S.target, label:S.label, n:S.n,
+            flip:S.flip, guesses:Array.from(S.guesses), scope:S.scope ? Array.from(S.scope) : null,
+            phase:S.phase};
+  });
+}
+if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(start);
+else start((window.claude && window.claude.hot && window.claude.hot.data) || null);
+})();
+</script>
