@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<rect width="512" height="512" rx="0" fill="#171B19"/>
+<defs><pattern id="h" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="14" fill="rgba(179,58,46,.30)"/></pattern></defs>
+<rect x="120" y="120" width="68" height="68" fill="#E7E2D1"/>
+<rect x="188" y="120" width="68" height="68" fill="#7D8F72"/>
+<rect x="256" y="120" width="68" height="68" fill="#E7E2D1"/>
+<rect x="324" y="120" width="68" height="68" fill="#7D8F72"/>
+<rect x="120" y="188" width="68" height="68" fill="#7D8F72"/>
+<rect x="188" y="188" width="68" height="68" fill="#E7E2D1"/>
+<rect x="256" y="188" width="68" height="68" fill="#7D8F72"/>
+<rect x="324" y="188" width="68" height="68" fill="#E7E2D1"/>
+<rect x="120" y="256" width="68" height="68" fill="#E7E2D1"/>
+<rect x="188" y="256" width="68" height="68" fill="#7D8F72"/>
+<rect x="256" y="256" width="68" height="68" fill="#E7E2D1"/>
+<rect x="324" y="256" width="68" height="68" fill="#7D8F72"/>
+<rect x="120" y="324" width="68" height="68" fill="#7D8F72"/>
+<rect x="188" y="324" width="68" height="68" fill="#E7E2D1"/>
+<rect x="256" y="324" width="68" height="68" fill="#7D8F72"/>
+<rect x="324" y="324" width="68" height="68" fill="#E7E2D1"/>
+<rect x="188" y="256" width="68" height="68" fill="rgba(179,58,46,0.34)"/>
+<rect x="188" y="256" width="68" height="68" fill="url(#h)"/>
+<rect x="192.76" y="260.76" width="58.48" height="58.48" fill="none" stroke="#B33A2E" stroke-width="4.76"/>
+<rect x="256" y="188" width="68" height="68" fill="rgba(179,58,46,0.55)"/>
+<rect x="256" y="188" width="68" height="68" fill="url(#h)"/>
+<rect x="260.76" y="192.76" width="58.48" height="58.48" fill="none" stroke="#B33A2E" stroke-width="4.76"/>
+<rect x="324" y="120" width="68" height="68" fill="rgba(179,58,46,0.76)"/>
+<rect x="324" y="120" width="68" height="68" fill="url(#h)"/>
+<rect x="328.76" y="124.76" width="58.48" height="58.48" fill="none" stroke="#B33A2E" stroke-width="4.76"/>
+<circle cx="154" cy="358" r="20.4" fill="#171B19" stroke="#FCFBF5" stroke-width="4.76"/>
+</svg>

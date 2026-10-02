@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Square Pressure",
+  "short_name": "Square Pressure",
+  "description": "A chess board-vision drill: mark every square one side attacks, then check yourself.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E4E7E2",
+  "theme_color": "#E4E7E2",
+  "categories": ["education", "games"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

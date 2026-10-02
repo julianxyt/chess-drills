@@ -8,6 +8,31 @@ count against yours.
 Open `index.html` in any browser. No build, no dependencies, no network calls
 beyond the Google Fonts stylesheet.
 
+## Install on Windows
+
+1. Download the repository (green **Code** button, then **Download ZIP**) and unzip it,
+   or `git clone` it.
+2. Open `square-pressure\windows` and double-click **`install.cmd`**.
+
+That installs it for your Windows user only, so no admin rights are needed. It copies
+the drill to `%LOCALAPPDATA%\Programs\Square Pressure` and adds Start menu and desktop
+shortcuts with the Square Pressure icon. The shortcuts open it in its own window
+(Microsoft Edge in app mode, or Chrome if Edge is missing), with no tabs or address bar.
+It also registers it under **Settings → Apps → Installed apps**, so you can uninstall
+it from there like any other program. Run the installer again to upgrade. Options:
+`install.cmd -NoDesktop` skips the desktop shortcut, and `-NoLaunch` skips opening it
+when it finishes.
+
+Your session stats are kept in the browser's local storage, so uninstalling does not
+erase them.
+
+## Install from the web
+
+When the folder is served over HTTPS (for example from GitHub Pages), the page is an
+installable web app. It has a manifest, icons, and an offline cache. In Edge or Chrome,
+use **Install app** in the address bar (on a phone, **Add to Home Screen**). After the
+first visit it runs offline.
+
 ## What counts as an attack
 
 - Any square the piece could capture on, **including squares holding its own

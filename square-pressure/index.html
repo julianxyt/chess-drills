@@ -1,5 +1,15 @@
+<!doctype html>
+<html lang="en">
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Square Pressure</title>
+<meta name="description" content="A chess board-vision drill: mark every square one side attacks, then check yourself.">
+<meta name="theme-color" content="#E4E7E2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14181A" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/square-pressure.ico" sizes="any">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&family=Spectral:ital,wght@0,500;0,600;1,500&display=swap">
 <style>
@@ -478,7 +488,7 @@ var GENERIC_END = {
   k:"e3:2 d3:2 f2:2 g2:2 e2:2 d2:2 f3:2 c3:1.5 g3:1.5 e4:1.2 d4:1.2 h2:1 b2:1 c4:.8 f4:.8 g1:1.2 c1:.8 f1:1"
 };
 var KING_HOME = {
-  k:[["g1",7],["h1",1.2],["g1",0]],
+  k:[["g1",7],["h1",1.2]],
   q:[["c1",5],["b1",3]],
   none:[["e1",6],["f1",1],["d1",.8],["e2",.4]]
 };
@@ -769,20 +779,20 @@ function chooseScope(truth){
 }
 
 function newPosition(){
-  var diff = setting("diff");
-  var pos = buildPosition(diff);
-  if (!pos) return;
-  var mode = setting("mode");
-  var target;
-  if (mode === "pressure") target = pos.stm;
-  else if (mode === "threats") target = other(pos.stm);
-  else target = Math.random() < .5 ? pos.stm : other(pos.stm);
-
-  var truth = target === "w" ? pos.wa : pos.ba;
-  var scope = chooseScope(truth);
-  var live = 0;
-  for (var i = 0; i < 64; i++) if (truth.counts[i] > 0 && (!scope || scope.has(i))) live++;
-  if (live < 4) return newPosition();
+  var diff = setting("diff"), mode = setting("mode");
+  var pos, target, truth, scope;
+  for (var tries = 0; tries < 40; tries++){
+    pos = buildPosition(diff);
+    if (!pos) return;
+    if (mode === "pressure") target = pos.stm;
+    else if (mode === "threats") target = other(pos.stm);
+    else target = Math.random() < .5 ? pos.stm : other(pos.stm);
+    truth = target === "w" ? pos.wa : pos.ba;
+    scope = chooseScope(truth);
+    var live = 0;
+    for (var i = 0; i < 64; i++) if (truth.counts[i] > 0 && (!scope || scope.has(i))) live++;
+    if (live >= 4) break;                    /* keep the last try if none qualify */
+  }
 
   S.board = pos.board; S.stm = pos.stm; S.target = target; S.label = pos.label;
   S.truth = truth; S.guesses = new Int16Array(64); S.scope = scope;
@@ -998,6 +1008,11 @@ if (window.claude && window.claude.hot && window.claude.hot.snapshot){
     return {board:S.board ? encode() : null, stm:S.stm, target:S.target, label:S.label, n:S.n,
             flip:S.flip, guesses:Array.from(S.guesses), scope:S.scope ? Array.from(S.scope) : null,
             phase:S.phase};
+  });
+}
+if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener("load", function(){
+    navigator.serviceWorker.register("sw.js").catch(function(){});
   });
 }
 if (window.claude && window.claude.hot && window.claude.hot.ready) window.claude.hot.ready(start);
