@@ -49,17 +49,31 @@ Najdorf, Dragon, Carlsbad, isolated queen's pawn, Mar del Plata, French advance,
 closed Ruy Lopez, Caro-Kann classical, Semi-Slav, hedgehog, Benoni, Grünfeld
 exchange, Stonewall, Botvinnik English, plus six endgame skeletons — then castling
 is chosen with weights that fit the structure and the pieces are sampled from the
-squares they habitually occupy in it. Positions where both kings are in check, or
-where the kings are adjacent, are rejected.
+squares they habitually occupy in it.
+
+Every position is then filtered so it could have come from a real game:
+
+- The side that just moved has left nothing hanging. No piece is attacked by
+  something cheaper, attacked and undefended, or attacked more times than defended.
+- The side to move faces at most one such threat, the move just played.
+- Pawns come off in trades, the same number from each side (occasionally one
+  extra), and never from in front of a castled king.
+- After castling, a rook is never left in the corner beyond its king.
+- Material is level. Checks are allowed but rare, and the kings never touch.
 
 ## Settings
 
 - **What to mark** — the threats against the side to move, that side's own
   pressure, or mixed.
 - **Material** — endgame, middlegame, or a full board.
-- **Area** — one 4×4 quadrant (quick reps) or the whole board.
+- **Area** — the whole board (default), or one 4×4 quadrant for quick reps.
 
 ## Controls
+
+**Check** scores your marks. **Reveal** shows the answer without scoring it: if you
+had marked anything, each square is judged the same way Check does it. Green means
+right. Blue shows the real count with your mark struck through. Tap a square
+afterwards to list its attackers.
 
 Tap a square once per attacker. Shift-click, right-click or press-and-hold takes
 one back. Keyboard: arrows to move, space to add, backspace to remove, and

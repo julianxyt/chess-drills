@@ -1,5 +1,5 @@
 /* Square Pressure offline cache. Bump VERSION when any shell file changes. */
-var VERSION = "sp-v1";
+var VERSION = "sp-v2";
 var SHELL = [
   "./", "index.html", "manifest.webmanifest",
   "icons/icon.svg", "icons/icon-192.png", "icons/icon-512.png",

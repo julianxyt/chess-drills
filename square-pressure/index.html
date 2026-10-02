@@ -117,7 +117,7 @@ p{margin:0}
   text-shadow:0 1px 3px rgba(0,0,0,.45), 0 0 2px rgba(0,0,0,.35)}
 .sq.judged .verdict{display:flex}
 .sq .verdict i{font-style:normal; font-size:3.6cqw; font-weight:400; text-decoration:line-through; opacity:.85}
-.sq.ok .verdict{color:var(--good)} .sq.bad .verdict{color:var(--miss)}
+.sq.ok .verdict{color:var(--good)} .sq.bad .verdict{color:var(--miss)} .sq.ans .verdict{color:#fff}
 .sq.ok::after,.sq.bad::after{content:""; position:absolute; inset:0; z-index:1; pointer-events:none}
 .sq.ok::after{box-shadow:inset 0 0 0 3px var(--good)}
 .sq.bad::after{box-shadow:inset 0 0 0 3px var(--miss);
@@ -270,8 +270,8 @@ footer{margin-top:34px; padding-top:14px; border-top:1px solid var(--line); colo
         <div class="setrow">
           <span class="lab">Area to answer for</span>
           <div class="seg" role="radiogroup" aria-label="Area to answer for">
-            <input type="radio" name="scope" id="scope-quad" value="quad" checked><label for="scope-quad">One quadrant</label>
-            <input type="radio" name="scope" id="scope-all" value="all"><label for="scope-all">Whole board</label>
+            <input type="radio" name="scope" id="scope-all" value="all" checked><label for="scope-all">Whole board</label>
+            <input type="radio" name="scope" id="scope-quad" value="quad"><label for="scope-quad">One quadrant</label>
           </div>
         </div>
       </div>
@@ -391,7 +391,7 @@ var STRUCTURES = [
   hb:{n:["f6","c6","e5"], b:["g7","d7","e6"], r:["c8","e8","b8"], q:["a5","c7","d7"]}},
 
  {name:"Carlsbad structure", freq:1.3,
-  w:"a2 b2 c3 d4 e3 f2 g2 h2", b:"a7 b7 c6 d5 e6 f7 g7 h7",
+  w:"a2 b2 d4 e3 f2 g2 h2", b:"a7 b7 c6 d5 f7 g7 h7",
   cw:{k:.85,q:.05,none:.10}, cb:{k:.85,q:.05,none:.10},
   hw:{n:["f3","e5","d2","e2"], b:["d3","g5","f4"], r:["b1","c1","a1","e1"], q:["c2","b3","d3"]},
   hb:{n:["f6","d7","e4","g6"], b:["e7","d6","f5","b7"], r:["e8","a8","c8","b8"], q:["c7","b6","e7"]}},
@@ -439,13 +439,13 @@ var STRUCTURES = [
   hb:{n:["f6","d7","c5"], b:["b7","e7","d7"], r:["c8","e8","b8"], q:["c7","b8","a8"]}},
 
  {name:"Modern Benoni", freq:.8,
-  w:"a2 b2 c4 d5 e4 f2 g2 h2", b:"a7 b7 d6 f7 g6 h7",
+  w:"a2 b2 d5 e4 f2 g2 h2", b:"a7 b7 c5 d6 f7 g6 h7",
   cw:{k:.8,none:.2}, cb:{k:.95,none:.05},
-  hw:{n:["c3","f3","d2"], b:["e2","d3","f4","g5"], r:["e1","a1","b1"], q:["e2","c2","a4"]},
+  hw:{n:["c3","f3","d2","c4"], b:["e2","d3","f4","g5"], r:["e1","a1","b1"], q:["e2","c2","a4"]},
   hb:{n:["f6","d7","a6"], b:["g7","f5","d7"], r:["e8","b8","a7"], q:["e7","c7","a5"]}},
 
  {name:"Grünfeld exchange", freq:.9,
-  w:"a2 b2 c3 d4 e4 f2 g2 h2", b:"a7 b7 c5 e7 f7 g6 h7",
+  w:"a2 c3 d4 e4 f2 g2 h2", b:"a7 b7 c5 e7 f7 g6 h7",
   cw:{k:.6,q:.15,none:.25}, cb:{k:.9,none:.1},
   hw:{n:["f3","e2","d2"], b:["e3","c4","b5","g5"], r:["c1","d1","b1"], q:["d2","a4","b3"]},
   hb:{n:["c6","d7","a5"], b:["g7","g4","e6"], r:["c8","d8","e8"], q:["a5","c7","d7"]}},
@@ -467,8 +467,8 @@ var ENDGAMES = [
  {name:"Four against three on the kingside", w:"e4 f2 g2 h2", b:"f7 g7 h7"},
  {name:"Symmetrical five against five", w:"a2 b2 f2 g2 h2", b:"a7 b7 f7 g7 h7"},
  {name:"Outside passer against the majority", w:"a4 c3 f2 g2 h2", b:"c7 f7 g7 h6"},
- {name:"Connected passers against a blockade", w:"d5 e4 g2 h2", b:"c6 f7 g7 h7"},
- {name:"Queenside majority", w:"a2 b2 c3 g2 h2", b:"a7 c7 f7 g7"},
+ {name:"Connected passers against an outside passer", w:"d5 e4 g2 h2", b:"a6 f7 g7 h7"},
+ {name:"Queenside majority", w:"a2 b2 c3 g2 h2", b:"a7 b7 f7 g7 h7"},
  {name:"Doubled f-pawns", w:"a2 f2 f3 g2 h2", b:"a7 e6 f7 g7 h7"}
 ];
 
@@ -500,11 +500,11 @@ function sideSquares(list, color){
 }
 function squareParity(i){ return (fileOf(i) + rankOf(i)) % 2; }
 
-function placePiece(board, t, color, hints, endgame, bishopParities){
+function placePiece(board, t, color, hints, endgame, bishopParities, banned){
   var entries = [], seen = {};
   var push = function(name, w){
     var i = parseSq(name);
-    if (board[i]) return;
+    if (board[i] || (banned && banned[i])) return;
     if (t === "b" && bishopParities.indexOf(squareParity(i)) !== -1) return;
     if (seen[name] != null){ entries[seen[name]][1] += w; return; }
     seen[name] = entries.length;
@@ -545,16 +545,56 @@ function materialFor(diff){
   var schemes = [
     [["r"],["r"]], [["r","b"],["r","n"]], [["q"],["q"]], [["n"],["b"]],
     [["r","r"],["r","r"]], [["b"],["b"]], [["r","n"],["r","b"]],
-    [["q","n"],["q","b"]], [["r"],["n"]], [["b","n"],["n","n"]], [["r","b"],["r","b"]]
+    [["q","n"],["q","b"]], [["n"],["n"]], [["b","n"],["n","n"]], [["r","b"],["r","b"]]
   ];
   var s = pick(schemes);
   return {w:s[0].slice(), b:s[1].slice()};
 }
 
-function trimPawns(list, n){
-  var out = list.slice();
-  while (n-- > 0 && out.length > 2) out.splice(rnd(out.length), 1);
+function trimPawns(board, color, n, shield){
+  var mine = [];
+  for (var i = 0; i < 64; i++){
+    var p = board[i];
+    if (p && p.t === "p" && p.c === color && !shield[i]) mine.push(i);
+  }
+  while (n-- > 0 && mine.length > 2) board[mine.splice(rnd(mine.length), 1)[0]] = null;
+}
+
+/* The three files in front of a castled king, one and two ranks up. */
+function shieldSquares(k, color){
+  var out = {}, home = color === "w" ? 0 : 7, fwd = color === "w" ? 1 : -1;
+  if (rankOf(k) !== home || fileOf(k) === 3 || fileOf(k) === 4) return out;
+  var files = fileOf(k) >= 5 ? [5,6,7] : [0,1,2];
+  files.forEach(function(f){ out[(home + fwd) * 8 + f] = 1; out[(home + 2 * fwd) * 8 + f] = 1; });
   return out;
+}
+
+/* After castling the rook sits between king and centre, never in the corner beyond the king. */
+function rookBans(k, color){
+  var out = {}, home = color === "w" ? 0 : 7;
+  if (rankOf(k) !== home || fileOf(k) === 3 || fileOf(k) === 4) return out;
+  for (var f = 0; f < 8; f++){
+    if (fileOf(k) >= 5 ? f > fileOf(k) : f < fileOf(k)) out[home * 8 + f] = 1;
+  }
+  return out;
+}
+
+/* A piece is en prise if something cheaper hits it, nothing defends it, or
+   attackers outnumber defenders. Kings never count. */
+var VALUE = {p:1, n:3, b:3, r:5, q:9, k:100};
+function enPriseCount(board, color, own, opp){
+  var n = 0;
+  for (var i = 0; i < 64; i++){
+    var p = board[i];
+    if (!p || p.c !== color || p.t === "k") continue;
+    var att = opp.by[i];
+    if (!att.length) continue;
+    var cheapest = 100;
+    for (var a = 0; a < att.length; a++) cheapest = Math.min(cheapest, VALUE[board[att[a]].t]);
+    var def = own.by[i].length;
+    if (cheapest < VALUE[p.t] || def === 0 || att.length > def) n++;
+  }
+  return n;
 }
 
 function tryBuild(diff){
@@ -567,11 +607,8 @@ function tryBuild(diff){
   }
   var board = new Array(64); for (var z = 0; z < 64; z++) board[z] = null;
 
-  var wp = skel.w.split(" "), bp = skel.b.split(" ");
-  if (diff === "standard"){ wp = trimPawns(wp, rnd(3)); bp = trimPawns(bp, rnd(3)); }
-  if (diff === "heavy"){ wp = trimPawns(wp, rnd(2)); bp = trimPawns(bp, rnd(2)); }
-  wp.forEach(function(s){ board[parseSq(s)] = {t:"p", c:"w"}; });
-  bp.forEach(function(s){ board[parseSq(s)] = {t:"p", c:"b"}; });
+  skel.w.split(" ").forEach(function(sq){ board[parseSq(sq)] = {t:"p", c:"w"}; });
+  skel.b.split(" ").forEach(function(sq){ board[parseSq(sq)] = {t:"p", c:"b"}; });
 
   var castle = {w:"none", b:"none"};
   if (!endgame){
@@ -579,19 +616,32 @@ function tryBuild(diff){
     castle.b = pickW(Object.keys(skel.cb).map(function(k){ return [k, skel.cb[k]]; }));
   }
 
-  var mat = materialFor(diff);
-  var colors = ["w","b"];
+  var colors = ["w","b"], kingAt = {};
   for (var c = 0; c < 2; c++){
     var col = colors[c];
     var kingHints = endgame ? null : sideSquares(KING_HOME[castle[col]].map(function(e){ return e[0]; }), col);
     if (!placePiece(board, "k", col, kingHints, endgame, [])) return null;
+    for (var z2 = 0; z2 < 64; z2++) if (board[z2] && board[z2].t === "k" && board[z2].c === col) kingAt[col] = z2;
   }
+
+  /* Pawns come off in trades: the same number each side, now and then one more. */
+  if (!endgame){
+    var trades = diff === "standard" ? rnd(3) : rnd(2);
+    var extra = diff === "standard" && Math.random() < .25 ? 1 : 0;
+    var extraSide = Math.random() < .5 ? "w" : "b";
+    colors.forEach(function(col){
+      trimPawns(board, col, trades + (col === extraSide ? extra : 0), shieldSquares(kingAt[col], col));
+    });
+  }
+
+  var mat = materialFor(diff);
   for (var c2 = 0; c2 < 2; c2++){
     var col2 = colors[c2];
     var hints = endgame ? {} : (col2 === "w" ? skel.hw : skel.hb);
     var parities = [];
     var list = mat[col2].slice();
     var firstRook = true;
+    var bans = endgame ? null : rookBans(kingAt[col2], col2);
     for (var m = 0; m < list.length; m++){
       var t = list[m];
       var h = hints[t] ? hints[t].slice() : null;
@@ -599,25 +649,32 @@ function tryBuild(diff){
         h = sideSquares(ROOK_HOME[castle[col2]], col2).concat(h || []);
         firstRook = false;
       }
-      if (!placePiece(board, t, col2, h, endgame, parities)) return null;
+      if (!placePiece(board, t, col2, h, endgame, parities, t === "r" ? bans : null)) return null;
     }
   }
 
   var wa = computeAttacks(board, "w"), ba = computeAttacks(board, "b");
-  var wk = -1, bk = -1;
-  for (var i = 0; i < 64; i++){
-    if (board[i] && board[i].t === "k") { if (board[i].c === "w") wk = i; else bk = i; }
-  }
-  if (wk < 0 || bk < 0) return null;
+  var wk = kingAt.w, bk = kingAt.b;
+  if (fileOf(wk) - fileOf(bk) <= 1 && fileOf(bk) - fileOf(wk) <= 1 &&
+      rankOf(wk) - rankOf(bk) <= 1 && rankOf(bk) - rankOf(wk) <= 1) return null;
   var wInCheck = ba.counts[wk] > 0, bInCheck = wa.counts[bk] > 0;
   if (wInCheck && bInCheck) return null;
-  var stm = wInCheck ? "w" : bInCheck ? "b" : (Math.random() < .5 ? "w" : "b");
+  if ((wInCheck || bInCheck) && Math.random() < .8) return null;   /* checks happen, just not often */
+
+  /* Believable means the side that just moved has left nothing hanging, and the
+     side to move faces at most one threat (the move just played). */
+  var hang = {w:enPriseCount(board, "w", wa, ba), b:enPriseCount(board, "b", ba, wa)};
+  var ok = (wInCheck ? ["w"] : bInCheck ? ["b"] : ["w","b"]).filter(function(s){
+    return hang[other(s)] === 0 && hang[s] <= 1;
+  });
+  if (!ok.length) return null;
+  var stm = pick(ok);
 
   return {board:board, stm:stm, label:label, wa:wa, ba:ba, endgame:endgame};
 }
 
 function buildPosition(diff){
-  for (var t = 0; t < 120; t++){
+  for (var t = 0; t < 600; t++){
     var p = tryBuild(diff);
     if (p) return p;
   }
@@ -666,10 +723,14 @@ function setting(name){
 function paintSquare(btn, i){
   var g = S.guesses[i], t = S.truth ? S.truth.counts[i] : 0;
   var cls = "sq " + (squareParity(i) ? "l" : "d");
-  if (S.scope && !S.scope.has(i)) cls += " out";
+  var inScope = !S.scope || S.scope.has(i);
+  /* Revealed with nothing marked: show the answer as a perfect marking, no verdict colours. */
+  var plain = S.phase === "revealed" && !anyMarks() && inScope;
+  if (plain) g = t;
+  if (!inScope) cls += " out";
   if (g > 0) cls += " m" + Math.min(5, g);
-  var judged = S.phase !== "guess" && (!S.scope || S.scope.has(i));
-  if (judged && (t > 0 || g > 0)) cls += " judged " + (t === g ? "ok" : "bad");
+  var judged = S.phase !== "guess" && inScope;
+  if (judged && (t > 0 || g > 0)) cls += " judged " + (plain ? "ans" : t === g ? "ok" : "bad");
   if (i === S.sel) cls += " sel";
   btn.className = cls;
 
@@ -690,6 +751,11 @@ function paintSquare(btn, i){
   lab += g > 0 ? ", marked " + g : "";
   if (judged) lab += ", actual " + t;
   btn.setAttribute("aria-label", lab);
+}
+
+function anyMarks(){
+  for (var i = 0; i < 64; i++) if (S.guesses[i]) return true;
+  return false;
 }
 
 function renderBoard(){
@@ -817,9 +883,7 @@ function scopeList(){
   return out;
 }
 
-function check(){
-  if (S.phase !== "guess") return;
-  stopClock();
+function judge(){
   var exact = 0, under = 0, over = 0, phantom = 0, relevant = 0, missSquares = 0;
   scopeList().forEach(function(i){
     var t = S.truth.counts[i], g = S.guesses[i];
@@ -832,6 +896,22 @@ function check(){
       else over += g - t;
     }
   });
+  return {exact:exact, under:under, over:over, phantom:phantom, relevant:relevant, missSquares:missSquares};
+}
+function showTally(j){
+  resTally.hidden = false;
+  document.getElementById("tExact").textContent = j.exact + " / " + j.relevant;
+  document.getElementById("tUnder").textContent = j.under;
+  document.getElementById("tOver").textContent = j.over;
+  document.getElementById("tPhantom").textContent = j.phantom;
+  document.getElementById("btnCheck").disabled = true;
+  inspHint.textContent = "Tap any square to list its attackers.";
+}
+
+function check(){
+  if (S.phase !== "guess") return;
+  stopClock();
+  var j = judge(), exact = j.exact, relevant = j.relevant, missSquares = j.missSquares;
   S.phase = "checked";
   renderBoard();
 
@@ -848,27 +928,23 @@ function check(){
   resSub.textContent = clean
     ? "Every attacker accounted for in " + fmtTime(Date.now() - S.started) + "."
     : "Blue squares show the real count; your mark is struck through. Tap one to see its attackers.";
-  resTally.hidden = false;
-  document.getElementById("tExact").textContent = exact + " / " + relevant;
-  document.getElementById("tUnder").textContent = under;
-  document.getElementById("tOver").textContent = over;
-  document.getElementById("tPhantom").textContent = phantom;
-  document.getElementById("btnCheck").disabled = true;
-  inspHint.textContent = "Tap any square to list its attackers.";
+  showTally(j);
 }
 
 function reveal(){
   if (S.phase === "checked") return;
   stopClock();
   S.phase = "revealed";
-  scopeList().forEach(function(i){ S.guesses[i] = S.truth.counts[i]; });
+  var j = judge(), marked = anyMarks();
   renderBoard();
   resHead.className = "headline";
-  resHead.textContent = "Answer shown";
-  resSub.textContent = "Not scored. Tap a square to see which pieces cover it.";
-  resTally.hidden = true;
-  document.getElementById("btnCheck").disabled = true;
-  inspHint.textContent = "Tap any square to list its attackers.";
+  resHead.textContent = !marked ? "Answer shown"
+    : j.missSquares === 0 ? "Answer shown · you had it all"
+    : "Answer shown · " + j.missSquares + " square" + (j.missSquares === 1 ? "" : "s") + " off";
+  resSub.textContent = marked
+    ? "Not scored. Green squares you had right; blue show the real count with your mark struck through. Tap a square to see its attackers."
+    : "Not scored. Each square shows how many times it is attacked. Tap one to see which pieces.";
+  showTally(j);
   STATS.streak = 0; saveStats(); renderStats();
 }
 
